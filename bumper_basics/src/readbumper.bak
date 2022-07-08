@@ -1,0 +1,79 @@
+
+
+    
+    if (data.state == BumperEvent.PRESSED):
+        bump = True
+        #rospy.loginfo(bump)
+        #cmd_vel.publish(stop_cmd)
+
+        if data.bumper == 0:
+        
+            led1.publish(Led.GREEN)
+
+            cmd_vel.publish(turnright_cmd)
+
+        elif data.bumper == 1:
+            
+            led1.publish(Led.ORANGE)
+        
+            #cmd_vel.publish(moveback_cmd)
+            moveback = True
+    
+
+        elif data.bumper == 2:
+            
+            led1.publish(Led.RED)
+            cmd_vel.publish(turnleft_cmd)
+
+
+    elif (data.state != BumperEvent.PRESSED):
+        bump = False 
+        led1.publish(Led.BLACK)
+
+    rospy.loginfo("Bumper Event")
+    rospy.loginfo(data.bumper)
+    bump = False 
+    rospy.loginfo(bump)
+
+def isArloBumperPressed(data):
+    if (data.state == BumperEvent.PRESSED):
+        bump = True
+    else:
+        bump = False
+    
+        
+def readbumper():
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # name are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+    rospy.init_node('readbumper_node', anonymous=False)
+    rospy.Subscriber("arlo/mobile_base/events/bumper", BumperEvent, processArloBump)
+    rospy.Subscriber("tobias/mobile_base/events/bumper", BumperEvent, processArloBump)
+    rospy.Subscriber("arlo/mobile_base/events/bumper", BumperEvent, isArloBumperPressed)
+    rospy.Subscriber("tobias/mobile_base/events/bumper", BumperEvent, processtobiasBump)
+    rospy.Subscriber("arlo/mobile_base/events/bumper", BumperEvent, processtobiasBump)
+
+    tobiascmd_vel = rospy.Publisher('tobias/mobile_base/commands/velocity', Twist, queue_size=10)
+    arlocmd_vel = rospy.Publisher('arlo/mobile_base/commands/velocity', Twist, queue_size=10)
+    
+    
+    r = rospy.Rate(3) # 10hz
+    while not rospy.is_shutdown():
+        if moveback == True:
+            tobiascmd_vel.publish(moveback_cmd)  
+        if(bump == False):
+            tobiascmd_vel.publish(moveforward_cmd)  
+            arlocmd_vel.publish(moveforward_cmd)
+        #if(bump == True):
+        # tobiascmd_vel.publish(stop_cmd)  
+        r.sleep()
+    
+
+
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
+
+if __name__ == '__main__':
+    readbumper()
