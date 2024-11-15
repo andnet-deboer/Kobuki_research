@@ -1,2 +1,2 @@
-# Hope College - 2022 Summer Research #
+# Hope College - Summer 2022 Research #
 
